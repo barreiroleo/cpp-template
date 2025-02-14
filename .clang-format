@@ -1,0 +1,43 @@
+---
+Language:     Cpp
+BasedOnStyle: Webkit
+
+ColumnLimit:  100
+IndentWidth:  4
+TabWidth:     4
+UseTab:       Never
+
+# Alignments
+AlignAfterOpenBracket:  Align
+AlignArrayOfStructures: Left
+AlignTrailingComments:
+  Kind: Always
+  OverEmptyLines: 0
+PackConstructorInitializers: NextLine
+
+# Break lines
+BreakTemplateDeclarations: Leave
+BreakBeforeBraces:         Custom
+BraceWrapping:
+  AfterClass:            true
+  AfterStruct:           true
+  AfterUnion:            true
+  BeforeCatch:           true
+  BeforeElse:            true
+  BeforeLambdaBody:      false
+  BeforeWhile:           false
+  SplitEmptyFunction:    false
+  SplitEmptyRecord:      false
+  SplitEmptyNamespace:   false
+
+# Single liners behaviour
+AllowShortBlocksOnASingleLine:              Always
+AllowShortCaseExpressionOnASingleLine:      true
+AllowShortCaseLabelsOnASingleLine:          true
+# TODO (clang-format 20): AllowShortNamespacesOnASingleLine: true
+
+# Sorts and fixes
+FixNamespaceComments: true # Namespace comment after closing brace
+InsertBraces:         true # Insert braces arround if, for, etc
+SortIncludes:         CaseInsensitive
+...

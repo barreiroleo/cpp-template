@@ -1,0 +1,16 @@
+Checks: [
+  bugprone-*,
+  cert-*,
+  clang-analyzer-*,
+  concurrency-*,
+  cppcoreguidelines-*,
+  hicpp-*,
+  misc-*,
+  modernize-*,
+  performance-*,
+  readability-*,
+]
+
+CheckOptions:
+  readability-function-cognitive-complexity.Threshold: 5
+  readability-function-cognitive-complexity.DescribeBasicIncrements: true
