@@ -24,7 +24,7 @@ build:
 clean:
 	@cmake --build build --target clean -v
 
-.PHONY: tests
+.PHONY: test
 test: build
 	ctest -j10 --test-dir build/tests --output-on-failure --verbose
 
