@@ -1,25 +1,21 @@
-name: Build & Test & Release
-
+name: Build, test and release
 on:
   push:
-    branches: [ "master" ]
+    branches: [master]
   pull_request:
-    branches: [ "master", "dev" ]
+    branches: [master]
   workflow_dispatch:
-
 jobs:
   build:
     runs-on: ${{ matrix.os }}
-
     strategy:
       # Set fail-fast to false to ensure that feedback is delivered for all matrix combinations.
       # Consider changing this to true when your workflow is stable.
-      fail-fast: false
-
+      fail-fast: true
       # Set up a matrix to run the following 3 configurations:
-      # 1. <Windows, Release, latest MSVC compiler toolchain on the default runner image, default generator>
-      # 2. <Linux, Release, latest GCC compiler toolchain on the default runner image, default generator>
-      # 3. <Linux, Release, latest Clang compiler toolchain on the default runner image, default generator>
+      # 1. <Windows, Release, latest MSVC compiler toolchain available, default generator>
+      # 2. <Linux, Release, latest GCC compiler toolchain available, default generator>
+      # 3. <Linux, Release, latest Clang compiler toolchain available, default generator>
       matrix:
         os: [ubuntu-latest, windows-latest]
         build_type: [Release]
@@ -43,125 +39,108 @@ jobs:
             c_compiler: cl
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    # Turn repeated input strings (such as the build output directory) into step outputs. These
-    # step outputs can be used throughout the workflow file.
-    - name: Set reusable strings
-      id: strings
-      shell: bash
-      run: echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
+      # Set common variables definitions to be used throughout the workflow file.
+      - name: Set reusable strings
+        id: strings
+        shell: bash
+        run: echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
 
-    - name: Configure CMake
-      run: >
-        cmake -B ${{ steps.strings.outputs.build-output-dir }}
-        -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
-        -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
-        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
-        -S ${{ github.workspace }}
+      - name: Configure CMake
+        run: >
+          cmake -B ${{ steps.strings.outputs.build-output-dir }}
+          -S ${{ github.workspace }}
+          -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
+          -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
+          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
 
-    # Note that --config is needed because the default Windows generator is a multi-config
-    # generator (Visual Studio generator).
-    - name: Build
-      run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }}
+      # Note that --config is needed because the default Windows generator is a multi-config
+      # generator (Visual Studio generator).
+      - name: Build
+        run: >
+          cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }}
 
-    - name: List Available Artifacts
-      run: ls -R ${{ github.workspace }}
+      # Note that --build-config is needed because the default Windows generator is a multi-config
+      # generator (Visual Studio generator).
+      - name: Test
+        working-directory: ${{ steps.strings.outputs.build-output-dir }}
+        run: >
+          ctest --build-config ${{ matrix.build_type }} --test-dir ${{ steps.strings.outputs.build-output-dir }}/tests
+          --output-on-failure --verbose
 
-    # Note that --build-config is needed because the default Windows generator is a multi-config
-    # generator (Visual Studio generator).
-    - name: Test
-      working-directory: ${{ steps.strings.outputs.build-output-dir }}
-      run: >
-        ctest --build-config ${{ matrix.build_type }}
-        --test-dir ${{ steps.strings.outputs.build-output-dir }}/tests
-        --output-on-failure --verbose
-
-    - name: Upload Build Artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: build-${{ matrix.os }}-${{ matrix.c_compiler }}
-        path: ${{ steps.strings.outputs.build-output-dir }}
-        retention-days: 3
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ matrix.os }}-${{ matrix.c_compiler }}
+          path: ${{ steps.strings.outputs.build-output-dir }}
+          retention-days: 3
 
   release:
-    # Wait for all builds to finish
+    # Only run when pushing to master. Wait for build jobs to finish.
+    if: github.ref == 'refs/heads/master'
     needs: build
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Set Release Tag
-      id: tag
-      run: echo "TAG_NAME=v1.0.${{ github.run_number }}" >> "$GITHUB_ENV"
+      - name: Create and Push Git Tag
+        id: tag
+        run: |
+          echo "TAG_NAME=v0.0.${{ github.run_number }}" >> "$GITHUB_ENV"
+          git tag $TAG_NAME
+          git push origin $TAG_NAME
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Create and Push Git Tag
-      run: |
-        git tag $TAG_NAME
-        git push origin $TAG_NAME
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        with:
+          tag_name: ${{ env.TAG_NAME }}
+          release_name: Release ${{ env.TAG_NAME }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    # Download to "artifacts" folder
-    - name: Download all build artifacts
-      uses: actions/download-artifact@v4
-      with:
-        path: artifacts
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
 
-    - name: List Available Artifacts
-      run: ls -R ${{ github.workspace }}
+      - name: Prepare and Upload Binaries
+        run: |
+          # Define paths to binaries
+          LINUX_CLANG="artifacts/build-ubuntu-latest-clang/project"
+          LINUX_GCC="artifacts/build-ubuntu-latest-gcc/project"
+          WINDOWS_CL="artifacts/build-windows-latest-cl/Release/project.exe"
 
+          # Ensure binaries exist before renaming
+          if [[ -f "$LINUX_CLANG" ]]; then
+            mv "$LINUX_CLANG" "cpp-template-linux-clang"
+            echo "Uploading cpp-template-linux-clang"
+            gh release upload ${{ env.TAG_NAME }} "cpp-template-linux-clang" --clobber
+          else
+            echo "❌ Linux Clang binary not found!"
+          fi
+          if [[ -f "$LINUX_GCC" ]]; then
+            mv "$LINUX_GCC" "cpp-template-linux-gcc"
+            echo "Uploading cpp-template-linux-gcc"
+            gh release upload ${{ env.TAG_NAME }} "cpp-template-linux-gcc" --clobber
+          else
+            echo "❌ Linux GCC binary not found!"
+          fi
+          if [[ -f "$WINDOWS_CL" ]]; then
+            mv "$WINDOWS_CL" "cpp-template-windows-cl.exe"
+            echo "Uploading cpp-template-windows-cl.exe"
+            gh release upload ${{ env.TAG_NAME }} "cpp-template-windows-cl.exe" --clobber
+          else
+            echo "❌ Windows CL binary not found!"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Create GitHub Release
-      id: create_release
-      uses: actions/create-release@v1
-      with:
-        tag_name: ${{ env.TAG_NAME }}
-        release_name: Release ${{ env.TAG_NAME }}
-        draft: false
-        prerelease: false
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Rename and Upload Binaries
-      run: |
-        # Define paths to binaries
-        LINUX_CLANG="artifacts/build-ubuntu-latest-clang/project"
-        LINUX_GCC="artifacts/build-ubuntu-latest-gcc/project"
-        WINDOWS_CL="artifacts/build-windows-latest-cl/Release/project.exe"
-
-        # Ensure binaries exist before renaming
-        if [[ -f "$LINUX_CLANG" ]]; then
-          mv "$LINUX_CLANG" "cpp-template-linux-clang"
-          echo "Uploading cpp-template-linux-clang"
-          gh release upload ${{ env.TAG_NAME }} "cpp-template-linux-clang" --clobber
-        else
-          echo "❌ Linux Clang binary not found!"
-        fi
-
-        if [[ -f "$LINUX_GCC" ]]; then
-          mv "$LINUX_GCC" "cpp-template-linux-gcc"
-          echo "Uploading cpp-template-linux-gcc"
-          gh release upload ${{ env.TAG_NAME }} "cpp-template-linux-gcc" --clobber
-        else
-          echo "❌ Linux GCC binary not found!"
-        fi
-
-        if [[ -f "$WINDOWS_CL" ]]; then
-          mv "$WINDOWS_CL" "cpp-template-windows-cl.exe"
-          echo "Uploading cpp-template-windows-cl.exe"
-          gh release upload ${{ env.TAG_NAME }} "cpp-template-windows-cl.exe" --clobber
-        else
-          echo "❌ Windows CL binary not found!"
-        fi
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-    # - name: Upload Binaries to Release
-    #   uses: softprops/action-gh-release@v1
-    #   with:
-    #     files: artifacts/**/*
-    #     tag_name: ${{ env.TAG_NAME }}  # Use the correct tag
-    #   env:
-    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Debug step to check the artifacts are there
+      # - name: List Available Artifacts
+      #   run: ls -R ${{ github.workspace }}
