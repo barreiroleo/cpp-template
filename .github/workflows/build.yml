@@ -1,10 +1,13 @@
 name: Build, test and release
+
 on:
   push:
     branches: [master]
+    tags: [v*] # Tags that starts with "v"
   pull_request:
     branches: [master]
   workflow_dispatch:
+
 jobs:
   build:
     runs-on: ${{ matrix.os }}
@@ -77,21 +80,15 @@ jobs:
           retention-days: 3
 
   release:
-    # Only run when pushing to master. Wait for build jobs to finish.
-    if: github.ref == 'refs/heads/master'
+    # Runs only tag push
+    if: github.ref_type == 'tag'
     needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Create and Push Git Tag
-        id: tag
-        run: |
-          echo "TAG_NAME=v0.0.${{ github.run_number }}" >> "$GITHUB_ENV"
-          git tag $TAG_NAME
-          git push origin $TAG_NAME
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Get Tag Name
+        run: echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> "$GITHUB_ENV"
 
       - name: Create GitHub Release
         id: create_release
