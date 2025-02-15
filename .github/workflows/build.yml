@@ -45,16 +45,14 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    # Turn repeated input strings (such as the build output directory) into step outputs. These
+    # step outputs can be used throughout the workflow file.
     - name: Set reusable strings
-      # Turn repeated input strings (such as the build output directory) into step outputs. These
-      # step outputs can be used throughout the workflow file.
       id: strings
       shell: bash
-      run: |
-        echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
+      run: echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
 
     - name: Configure CMake
-      # Output = '-B {github.workspace}/build' subdirectory. Source = '-S {github.workspace}'.
       run: >
         cmake -B ${{ steps.strings.outputs.build-output-dir }}
         -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
@@ -62,15 +60,18 @@ jobs:
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
         -S ${{ github.workspace }}
 
+    # Note that --config is needed because the default Windows generator is a multi-config
+    # generator (Visual Studio generator).
     - name: Build
-      # Note that --config is needed because the default Windows generator is a multi-config
-      # generator (Visual Studio generator).
       run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }}
 
+    - name: List Available Artifacts
+      run: ls -R ${{ github.workspace }}
+
+    # Note that --build-config is needed because the default Windows generator is a multi-config
+    # generator (Visual Studio generator).
     - name: Test
       working-directory: ${{ steps.strings.outputs.build-output-dir }}
-      # Note that --build-config is needed because the default Windows generator is a multi-config
-      # generator (Visual Studio generator).
       run: >
         ctest --build-config ${{ matrix.build_type }}
         --test-dir ${{ steps.strings.outputs.build-output-dir }}/tests
@@ -80,8 +81,87 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: build-${{ matrix.os }}-${{ matrix.c_compiler }}
-        path: build
+        path: ${{ steps.strings.outputs.build-output-dir }}
         retention-days: 3
+
+  release:
+    # Wait for all builds to finish
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set Release Tag
+      id: tag
+      run: echo "TAG_NAME=v1.0.${{ github.run_number }}" >> "$GITHUB_ENV"
+
+    - name: Create and Push Git Tag
+      run: |
+        git tag $TAG_NAME
+        git push origin $TAG_NAME
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    # Download to "artifacts" folder
+    - name: Download all build artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: artifacts
 
     - name: List Available Artifacts
       run: ls -R ${{ github.workspace }}
+
+
+    - name: Create GitHub Release
+      id: create_release
+      uses: actions/create-release@v1
+      with:
+        tag_name: ${{ env.TAG_NAME }}
+        release_name: Release ${{ env.TAG_NAME }}
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Rename and Upload Binaries
+      run: |
+        # Define paths to binaries
+        LINUX_CLANG="artifacts/build-ubuntu-latest-clang/project"
+        LINUX_GCC="artifacts/build-ubuntu-latest-gcc/project"
+        WINDOWS_CL="artifacts/build-windows-latest-cl/Release/project.exe"
+
+        # Ensure binaries exist before renaming
+        if [[ -f "$LINUX_CLANG" ]]; then
+          mv "$LINUX_CLANG" "cpp-template-linux-clang"
+          echo "Uploading cpp-template-linux-clang"
+          gh release upload ${{ env.TAG_NAME }} "cpp-template-linux-clang" --clobber
+        else
+          echo "❌ Linux Clang binary not found!"
+        fi
+
+        if [[ -f "$LINUX_GCC" ]]; then
+          mv "$LINUX_GCC" "cpp-template-linux-gcc"
+          echo "Uploading cpp-template-linux-gcc"
+          gh release upload ${{ env.TAG_NAME }} "cpp-template-linux-gcc" --clobber
+        else
+          echo "❌ Linux GCC binary not found!"
+        fi
+
+        if [[ -f "$WINDOWS_CL" ]]; then
+          mv "$WINDOWS_CL" "cpp-template-windows-cl.exe"
+          echo "Uploading cpp-template-windows-cl.exe"
+          gh release upload ${{ env.TAG_NAME }} "cpp-template-windows-cl.exe" --clobber
+        else
+          echo "❌ Windows CL binary not found!"
+        fi
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    # - name: Upload Binaries to Release
+    #   uses: softprops/action-gh-release@v1
+    #   with:
+    #     files: artifacts/**/*
+    #     tag_name: ${{ env.TAG_NAME }}  # Use the correct tag
+    #   env:
+    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
