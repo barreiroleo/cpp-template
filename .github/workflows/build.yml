@@ -1,3 +1,16 @@
+# Set up a matrix combination to build and test the following 3 configurations:
+#
+# | OS             | Build Type | C Compiler | C++ Compiler |
+# |----------------|------------|------------|--------------|
+# | ubuntu-latest  | Release    | gcc        | g++          |
+# | ubuntu-latest  | Release    | clang      | clang++      |
+# | windows-latest | Release    | cl         | cl           |
+#
+# Excluded Combinations:
+# - windows-latest + gcc
+# - windows-latest + clang
+# - ubuntu-latest + cl
+
 name: Build, test and release
 
 on:
@@ -12,13 +25,7 @@ jobs:
   build:
     runs-on: ${{ matrix.os }}
     strategy:
-      # Set fail-fast to false to ensure that feedback is delivered for all matrix combinations.
-      # Consider changing this to true when your workflow is stable.
       fail-fast: true
-      # Set up a matrix to run the following 3 configurations:
-      # 1. <Windows, Release, latest MSVC compiler toolchain available, default generator>
-      # 2. <Linux, Release, latest GCC compiler toolchain available, default generator>
-      # 3. <Linux, Release, latest Clang compiler toolchain available, default generator>
       matrix:
         os: [ubuntu-latest, windows-latest]
         build_type: [Release]
@@ -44,8 +51,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Set common variables definitions to be used throughout the workflow file.
-      - name: Set reusable strings
+      - name: Set workflow variables
         id: strings
         shell: bash
         run: echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
