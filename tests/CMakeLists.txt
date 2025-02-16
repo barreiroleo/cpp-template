@@ -3,5 +3,5 @@ include(GoogleTest)
 enable_testing()
 
 add_executable(basic ./Basic.cpp)
-target_link_libraries(basic PRIVATE GTest::gtest_main)
+target_link_libraries(basic PRIVATE GTest::gtest_main Somelib)
 gtest_discover_tests(basic)

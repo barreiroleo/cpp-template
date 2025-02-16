@@ -7,10 +7,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Dependencies
 include(cmake/Find_GTEST.cmake)
-include_directories(${PROJECT_SOURCE_DIR}/src)
 
-# Tests
-add_subdirectory(${PROJECT_SOURCE_DIR}/tests/)
+# Internal subprojects
+include_directories(${PROJECT_SOURCE_DIR}/src)
+add_subdirectory(${PROJECT_SOURCE_DIR}/lib)
+add_subdirectory(${PROJECT_SOURCE_DIR}/tests)
 
 # Linter target
 add_executable(project ./src/main.cpp)
+target_link_libraries(project PRIVATE Somelib)
