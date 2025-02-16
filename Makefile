@@ -26,7 +26,7 @@ clean:
 
 .PHONY: test
 test: build
-	ctest -j10 --test-dir build/tests --output-on-failure --verbose
+	ctest -j10 --test-dir build --output-on-failure --verbose
 
 .PHONY: graph
 graph:

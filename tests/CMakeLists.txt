@@ -1,7 +1,5 @@
-message("Building tests")
-include(GoogleTest)
-enable_testing()
+message("Building common tests")
 
-add_executable(basic ./Basic.cpp)
-target_link_libraries(basic PRIVATE GTest::gtest_main Somelib)
-gtest_discover_tests(basic)
+add_executable(Basic ./Basic.cpp)
+target_link_libraries(Basic PRIVATE GTest::gtest_main Somelib)
+gtest_discover_tests(Basic)

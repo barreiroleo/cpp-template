@@ -5,8 +5,10 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Dependencies
+# Tests dependencies
 include(cmake/Find_GTEST.cmake)
+include(GoogleTest)
+enable_testing()
 
 # Internal subprojects
 include_directories(${PROJECT_SOURCE_DIR}/src)
