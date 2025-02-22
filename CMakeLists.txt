@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.28)
-project(Project CXX)
+project(project CXX)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 23)
@@ -7,6 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Tests dependencies
 include(cmake/Find_GTEST.cmake)
+include(cmake/Find_ASSERTIONS.cmake)
 include(GoogleTest)
 enable_testing()
 
@@ -17,4 +18,4 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/tests)
 
 # Linter target
 add_executable(project ./src/main.cpp)
-target_link_libraries(project PRIVATE Somelib)
+target_link_libraries(project PRIVATE Somelib cpp-assertions)

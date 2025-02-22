@@ -22,6 +22,8 @@ A multiplatform C++23 project template with Cmake & GTest support out of the box
 - **Automatic releases**: Triggers releases when push version tags (v0.0.1)
 - **clang-format**: Webkit-based style. Few lines, simple tweaks
 - **clang-tidy**: Strict and modern settings
+- GTest included: *[GTest](https://google.github.io/googletest/)*
+- Assertion library to safer, debuggable, and clean code: *[cpp-assertions](https://github.com/barreiroleo/cpp-assertions/)*
 - **Local Makefile for development**:
     - Uses CMake + Ninja by default
     - Exports `compile_commands.json`
