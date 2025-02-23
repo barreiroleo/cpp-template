@@ -1,5 +1,5 @@
 include(FetchContent)
-set(PACKAGE cpp_assertions)
+set(PACKAGE cpp-assertions)
 
 FetchContent_Declare(
     ${PACKAGE}

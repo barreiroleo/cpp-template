@@ -5,9 +5,12 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Tests dependencies
+# Dependencies
 include(cmake/Find_GTEST.cmake)
 include(cmake/Find_ASSERTIONS.cmake)
+include(cmake/Find_SPDLOG.cmake)
+
+# Test
 include(GoogleTest)
 enable_testing()
 
@@ -18,4 +21,4 @@ add_subdirectory(${PROJECT_SOURCE_DIR}/tests)
 
 # Linter target
 add_executable(project ./src/main.cpp)
-target_link_libraries(project PRIVATE Somelib cpp-assertions)
+target_link_libraries(project PRIVATE somelib cpp-assertions logger)
