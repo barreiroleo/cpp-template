@@ -1,6 +1,7 @@
 Checks: [
   bugprone-*,
   cert-*,
+  clang-diagnostic-*,
   clang-analyzer-*,
   concurrency-*,
   cppcoreguidelines-*,
@@ -9,8 +10,38 @@ Checks: [
   modernize-*,
   performance-*,
   readability-*,
+
+  google-build-using-namespace,
+  google-default-arguments,
+  google-explicit-constructor,
+  google-runtime-*,
+  google-readability-avoid-underscore-in-googletest-name,
+  google-upgrade-googletest-case,
+
+  -readability-identifier-length,
+  -readability-magic-numbers,
 ]
 
 CheckOptions:
-  readability-function-cognitive-complexity.Threshold: 5
+  readability-function-cognitive-complexity.Threshold: 10
   readability-function-cognitive-complexity.DescribeBasicIncrements: true
+
+  ## Naming conventions
+  readability-identifier-naming.ClassCase:             CamelCase
+  readability-identifier-naming.ClassMemberCase:       lower_case
+  readability-identifier-naming.ClassMethodCase:       lower_case
+  readability-identifier-naming.MethodCase:            lower_case
+  readability-identifier-naming.ConstantCase:          UPPER_CASE
+  readability-identifier-naming.FunctionCase:          lower_case
+  readability-identifier-naming.GlobalConstantCase:    UPPER_CASE
+  readability-identifier-naming.StructCase:            CamelCase
+  readability-identifier-naming.VariableCase:          lower_case
+  # Class members
+  readability-identifier-naming.AbstractClassPrefix:   'I'
+  readability-identifier-naming.ClassMemberPrefix:     's_' # Affect to static members
+  readability-identifier-naming.PrivateMemberPrefix:   'm_'
+  readability-identifier-naming.ProtectedMemberPrefix: 'm_'
+  # General
+  readability-identifier-naming.GlobalVariablePrefix:  'g_'
+  readability-identifier-naming.StaticConstantPrefix:  's_'
+  readability-identifier-naming.StaticVariablePrefix:  's_'
