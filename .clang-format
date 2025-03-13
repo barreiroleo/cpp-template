@@ -2,7 +2,7 @@
 Language:     Cpp
 BasedOnStyle: Webkit
 
-ColumnLimit:  100
+ColumnLimit:  120
 IndentWidth:  4
 TabWidth:     4
 UseTab:       Never
