@@ -18,7 +18,3 @@ enable_testing()
 include_directories(${PROJECT_SOURCE_DIR}/src)
 add_subdirectory(${PROJECT_SOURCE_DIR}/lib)
 add_subdirectory(${PROJECT_SOURCE_DIR}/tests)
-
-# Linter target
-add_executable(project ./src/main.cpp)
-target_link_libraries(project PRIVATE somelib cpp-assertions logger)
