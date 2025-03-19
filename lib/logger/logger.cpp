@@ -1,6 +1,6 @@
 #define SPDLOG_ACTIVE_LEVEL SPDLOG_ACTIVE_LEVEL
 
-#include "Logger.hpp"
+#include "logger.hpp"
 #include <iostream>
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>

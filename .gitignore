@@ -3,3 +3,4 @@ build/
 include/gtest/
 include/cpp-assertions/
 include/spdlog/
+_tests

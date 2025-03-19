@@ -1,7 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <Logger.hpp>
-#include <Somelib.hpp>
+#include <logger/logger.hpp>
 
 TEST(Basic, DoSomething) { EXPECT_TRUE(true); }
 
