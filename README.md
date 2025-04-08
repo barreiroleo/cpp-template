@@ -45,6 +45,10 @@ make test
 make clean
 # Graph dependencies
 make graph
+# Format modified cpp files
+make format
+# Format all cpp files in repo
+make format-all
 ```
 
 ## CI/CD

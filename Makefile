@@ -32,3 +32,10 @@ test: build
 graph:
 	@ninja -C build -t graph all | dot -Tpng -o build_graph.png
 
+.PHONY: format
+format:
+	@cmake --build build --target format
+
+.PHONY: format-all
+format-modified:
+	@cmake --build build --target format-all
