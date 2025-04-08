@@ -7,8 +7,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Dependencies
 include(cmake/Find_GTEST.cmake)
+include(cmake/Find_BENCHMARK.cmake)
 include(cmake/Find_ASSERTIONS.cmake)
 include(cmake/Find_SPDLOG.cmake)
+include(cmake/Find_TRACY.cmake)
+include(cmake/Run_ClangFormat.cmake)
 
 # Test
 include(GoogleTest)

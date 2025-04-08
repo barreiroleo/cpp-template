@@ -18,9 +18,12 @@ Checks: [
   google-readability-avoid-underscore-in-googletest-name,
   google-upgrade-googletest-case,
 
+  # Disable redundant aliases
+  -bugprone-easily-swappable-parameters,
+  -cppcoreguidelines-avoid-magic-numbers,
+  -hicpp-vararg,
   -readability-identifier-length,
   -readability-magic-numbers,
-  -cppcoreguidelines-avoid-magic-numbers,
 ]
 
 CheckOptions:
@@ -32,8 +35,9 @@ CheckOptions:
   readability-identifier-naming.ClassMemberCase:       lower_case
   readability-identifier-naming.ClassMethodCase:       lower_case
   readability-identifier-naming.MethodCase:            lower_case
-  readability-identifier-naming.ConstantCase:          UPPER_CASE
+  readability-identifier-naming.ConstantCase:          lower_case
   readability-identifier-naming.FunctionCase:          lower_case
+  readability-identifier-naming.EnumConstantCase:      UPPER_CASE
   readability-identifier-naming.GlobalConstantCase:    UPPER_CASE
   readability-identifier-naming.StructCase:            CamelCase
   readability-identifier-naming.VariableCase:          lower_case

@@ -32,3 +32,6 @@ test: build
 graph:
 	@ninja -C build -t graph all | dot -Tpng -o build_graph.png
 
+.PHONY: format-modified
+format-modified:
+	@./cmake/run_clang_format.sh --mode=modified
